@@ -9,6 +9,7 @@ from mcp.client.stdio import stdio_client
 from openai import OpenAI
 
 from rich.pretty import pprint
+import os
 
 class MCPClient:
     def __init__(self):
@@ -31,10 +32,12 @@ class MCPClient:
         if not (is_python or is_js):
             raise ValueError("Server script must be a .py or .js file")
 
+        path = os.path.dirname(server_script_path)
+        script = os.path.basename(server_script_path)
         command = "uv" if is_python else "node"
         server_params = StdioServerParameters(
             command=command,
-            args=['run', server_script_path],
+            args=['run', '--directory', path, script],
             env=None
         )
 
