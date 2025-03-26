@@ -27,7 +27,7 @@ async def shell_helper(comment: str, shell_command: str) -> str:
         text=True               # 以文字形式返回
     )
 
-    result = '執行結果：\n```\n'
+    result = '執行結果：\n\n```\n'
 
     # 即時讀取輸出
     while True:
@@ -47,7 +47,7 @@ async def shell_helper(comment: str, shell_command: str) -> str:
 
     # 等待行程結束並取得返回碼
     return_code = process.wait()
-    result += f"\n```\n命令執行完成，返回碼: {return_code}\n\n"
+    result += f"\n```\n\n命令執行完成，返回碼: {return_code}\n\n"
     print(f"\n\n命令執行完成，返回碼: {return_code}")
 
     return result
