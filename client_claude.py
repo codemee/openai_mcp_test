@@ -39,6 +39,12 @@ class MCPClient:
             # args=['run', server_script_path],
             env=None
         )
+        if 'spotify' in script.lower():
+            # Spotify API requires environment variables
+            server_params.env = {
+                "SPOTIFY_CLIENT_ID": os.getenv("SPOTIFY_CLIENT_ID"),
+                "SPOTIFY_CLIENT_SECRET": os.getenv("SPOTIFY_CLIENT_SECRET")
+            }
 
         stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
         self.stdio, self.write = stdio_transport
@@ -68,64 +74,66 @@ class MCPClient:
             "input_schema": tool.inputSchema
         } for tool in response.tools]
 
-        # Initial Claude API call
-        response = self.anthropic.messages.create(
-            # model="claude-3-5-sonnet-20241022",
-            model="claude-3-7-sonnet-20250219",
-            max_tokens=1000,
-            messages=messages,
-            tools=available_tools
-        )
+        while True:
+            # Initial Claude API call
+            response = self.anthropic.messages.create(
+                # model="claude-3-5-sonnet-20241022",
+                model="claude-3-7-sonnet-20250219",
+                max_tokens=1000,
+                messages=messages,
+                tools=available_tools
+            )
 
-        # Process response and handle tool calls
-        tool_results = []
-        final_text = []
+            # Process response and handle tool calls
+            tool_results = []
+            final_text = []
 
-        assistant_message_content = []
-        for content in response.content:
-            if content.type == 'text':
-                # pprint(content)
-                final_text.append(content.text)
-                assistant_message_content.append(content)
-            elif content.type == 'tool_use':
-                # pprint(content)
-                tool_name = content.name
-                tool_args = content.input
+            assistant_message_content = []
+            for content in response.content:
+                if content.type == 'text':
+                    # pprint(content)
+                    final_text.append(content.text)
+                    assistant_message_content.append(content)
+                elif content.type == 'tool_use':
+                    # pprint(content)
+                    tool_name = content.name
+                    tool_args = content.input
 
-                # Execute tool call
-                result = await self.session.call_tool(tool_name, tool_args)
-                tool_results.append({"call": tool_name, "result": result})
-                final_text.append(
-                    f"\n[Calling tool {tool_name} with args {tool_args}]\n\n"
-                    f"{result.content[0].text}\n\n"
-                )
+                    # Execute tool call
+                    result = await self.session.call_tool(tool_name, tool_args)
+                    tool_results.append({"call": tool_name, "result": result})
+                    final_text.append(
+                        f"\n[Calling tool {tool_name} with args {tool_args}]\n\n"
+                        f"{result.content[0].text}\n\n"
+                    )
 
-                assistant_message_content.append(content)
-                messages.append({
-                    "role": "assistant",
-                    "content": assistant_message_content
-                })
-                messages.append({
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": content.id,
-                            "content": result.content
-                        }
-                    ]
-                })
+                    assistant_message_content.append(content)
+                    messages.append({
+                        "role": "assistant",
+                        "content": assistant_message_content
+                    })
+                    messages.append({
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": content.id,
+                                "content": result.content
+                            }
+                        ]
+                    })
 
-                # Get next response from Claude
-                response = self.anthropic.messages.create(
-                    model="claude-3-5-sonnet-20241022",
-                    max_tokens=1000,
-                    messages=messages,
-                    tools=available_tools
-                )
+                    # # Get next response from Claude
+                    # response = self.anthropic.messages.create(
+                    #     model="claude-3-5-sonnet-20241022",
+                    #     max_tokens=1000,
+                    #     messages=messages,
+                    #     tools=available_tools
+                    # )
 
-                final_text.append(response.content[0].text)
-
+                    # final_text.append(response.content[0].text)
+            if tool_results == []:
+                break
         return "\n".join(final_text)
 
     async def chat_loop(self):
@@ -136,6 +144,7 @@ class MCPClient:
         hist = []
         while True:
             try:
+                pprint(hist)
                 query = input("\nQuery: ").strip()
 
                 if query.lower() == 'quit':
