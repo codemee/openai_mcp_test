@@ -9,4 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
+# vscode
+.vscode/
+
+# test
 test/

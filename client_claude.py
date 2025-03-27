@@ -29,12 +29,14 @@ class MCPClient:
         if not (is_python or is_js):
             raise ValueError("Server script must be a .py or .js file")
 
-        path = os.path.dirname(server_script_path)
-        script = os.path.basename(server_script_path)
+        abs_path = os.path.abspath(server_script_path)
+        path = os.path.dirname(abs_path)
+        script = os.path.basename(abs_path)
         command = "uv" if is_python else "node"
         server_params = StdioServerParameters(
             command=command,
             args=['run', '--directory', path, script],
+            # args=['run', server_script_path],
             env=None
         )
 
@@ -50,9 +52,9 @@ class MCPClient:
         print("\nConnected to server with tools:", [tool.name for tool in tools])
         # pprint(tools)
 
-    async def process_query(self, query: str) -> str:
-        """Process a query using Claude and available tools"""
-        messages = [
+    async def process_query(self, query: str, hist: list) -> str:
+        """Process a query using llm and available tools"""
+        messages = hist + [
             {
                 "role": "user",
                 "content": query
@@ -131,6 +133,7 @@ class MCPClient:
         print("\nMCP Client Started!")
         print("Type your queries or 'quit' to exit.")
 
+        hist = []
         while True:
             try:
                 query = input("\nQuery: ").strip()
@@ -138,8 +141,10 @@ class MCPClient:
                 if query.lower() == 'quit':
                     break
 
-                response = await self.process_query(query)
+                response = await self.process_query(query, hist)
                 print("\n" + response)
+                hist += [{"role": "user", "content": query}]
+                hist += [{"role": "assistant", "content": response}]
 
             except Exception as e:
                 print(f"\nError: {str(e)}")
