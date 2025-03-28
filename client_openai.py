@@ -42,6 +42,12 @@ class MCPClient:
             # args=['run', server_script_path],
             env=None
         )
+        if 'spotify' in script.lower():
+            # Spotify API requires environment variables
+            server_params.env = {
+                "SPOTIFY_CLIENT_ID": os.getenv("SPOTIFY_CLIENT_ID"),
+                "SPOTIFY_CLIENT_SECRET": os.getenv("SPOTIFY_CLIENT_SECRET")
+            }
 
         stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
         self.stdio, self.write = stdio_transport
@@ -72,56 +78,48 @@ class MCPClient:
             "parameters": tool.inputSchema
         } for tool in response.tools]
 
-        # Initial Claude API call
-        response = self.openai.responses.create(
-            # model="claude-3-5-sonnet-20241022",
-            model="gpt-4o-mini",
-            # max_tokens=1000,
-            input=messages,
-            tools=available_tools
-        )
+        while True:
+            # Initial Claude API call
+            response = self.openai.responses.create(
+                # model="claude-3-5-sonnet-20241022",
+                model="gpt-4o-mini",
+                # max_tokens=1000,
+                input=messages,
+                tools=available_tools
+            )
 
-        # Process response and handle tool calls
-        tool_results = []
-        final_text = []
+            # Process response and handle tool calls
+            tool_results = []
+            final_text = []
 
-        assistant_message_content = []
-        for output in response.output:
-            if output.type == 'message':
-                final_text.append(output.content[0].text)
-                assistant_message_content.append(output.content[0].text)
-            elif output.type == 'function_call':
-                # pprint(output)
-                tool_name = output.name
-                tool_args = eval(output.arguments)
+            assistant_message_content = []
+            for output in response.output:
+                if output.type == 'message':
+                    final_text.append(output.content[0].text)
+                    assistant_message_content.append(output.content[0].text)
+                elif output.type == 'function_call':
+                    # pprint(output)
+                    tool_name = output.name
+                    tool_args = eval(output.arguments)
 
-                # Execute tool call
-                result = await self.session.call_tool(tool_name, tool_args)
-                tool_results.append({"call": tool_name, "result": result})
-                final_text.append(
-                    f"\n[Calling tool {tool_name} with args {tool_args}]\n\n"
-                    f"{result.content[0].text}\n\n"
-                )
+                    # Execute tool call
+                    result = await self.session.call_tool(tool_name, tool_args)
+                    tool_results.append({"call": tool_name, "result": result})
+                    final_text.append(
+                        f"\n[Calling tool {tool_name} with args {tool_args}]\n\n"
+                        f"{result.content[0].text}\n\n"
+                    )
 
-                assistant_message_content.append(output)
-                messages.append(output)
-                messages.append({
-                    # 建立可傳回函式執行結果的字典
-                    "type": "function_call_output", # 以工具角色送出回覆
-                    "call_id": output.call_id, # 叫用函式的識別碼
-                    "output": result.content[0].text # 函式傳回值
-                })
-                # pprint(messages)
-                # Get next response from Claude
-                response = self.openai.responses.create(
-                    # model="claude-3-5-sonnet-20241022",
-                    # max_tokens=1000,
-                    model="gpt-4o-mini",
-                    input=messages,
-                    tools=available_tools
-                )
-
-                final_text.append(response.output_text)
+                    assistant_message_content.append(output)
+                    messages.append(output)
+                    messages.append({
+                        # 建立可傳回函式執行結果的字典
+                        "type": "function_call_output", # 以工具角色送出回覆
+                        "call_id": output.call_id, # 叫用函式的識別碼
+                        "output": result.content[0].text # 函式傳回值
+                    })
+            if tool_results == []:
+                break
         return "\n".join(final_text)
 
     async def chat_loop(self):
@@ -132,6 +130,7 @@ class MCPClient:
         hist = []
         while True:
             try:
+                pprint(hist)
                 query = input("\nQuery: ").strip()
 
                 if query.lower() == 'quit':

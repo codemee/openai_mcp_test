@@ -123,15 +123,6 @@ class MCPClient:
                         ]
                     })
 
-                    # # Get next response from Claude
-                    # response = self.anthropic.messages.create(
-                    #     model="claude-3-5-sonnet-20241022",
-                    #     max_tokens=1000,
-                    #     messages=messages,
-                    #     tools=available_tools
-                    # )
-
-                    # final_text.append(response.content[0].text)
             if tool_results == []:
                 break
         return "\n".join(final_text)
