@@ -40,6 +40,10 @@ class MCPClient:
             }
 
         server_params = StdioServerParameters(
+            # 在 Linux 上最好寫完整的路徑
+            # 因為 Linux 是以 env 參數內的 PATH 搜尋可執行檔
+            # 但底下會把 env 清掉不會有 PATH 提供搜尋路徑
+            # Windows 上會以目前環境的 PATH 搜尋不會有問題
             command='uv',
             # 你可以把路徑放在 uv 的 --directory 參數
             # 讓 uv 切換工作目錄再執行 script
