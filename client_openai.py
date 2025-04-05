@@ -27,27 +27,39 @@ class MCPClient:
         Args:
             server_script_path: Path to the server script (.py or .js)
         """
-        is_python = server_script_path.endswith('.py')
-        is_js = server_script_path.endswith('.js')
-        if not (is_python or is_js):
-            raise ValueError("Server script must be a .py or .js file")
 
         abs_path = os.path.abspath(server_script_path)
         path = os.path.dirname(abs_path)
         script = os.path.basename(abs_path)
-        command = "uv" if is_python else "node"
-        server_params = StdioServerParameters(
-            command=command,
-            args=['run', '--directory', path, script],
-            # args=['run', server_script_path],
-            env=None
-        )
+        env = {} 
         if 'spotify' in script.lower():
             # Spotify API requires environment variables
-            server_params.env = {
+            env = {
                 "SPOTIFY_CLIENT_ID": os.getenv("SPOTIFY_CLIENT_ID"),
                 "SPOTIFY_CLIENT_SECRET": os.getenv("SPOTIFY_CLIENT_SECRET")
             }
+
+        server_params = StdioServerParameters(
+            command='uv',
+            # 你可以把路徑放在 uv 的 --directory 參數
+            # 讓 uv 切換工作目錄再執行 script
+            # 官方範例都是採用上述這種作法
+            # args=['run', '--directory', path, script],
+            
+            # 或是也可以像是這樣利用 cwd 指定 server 路徑
+            # SDK 會先切換工作目錄才執行 command
+            # 如果不是使用 uv 執行 python 就需要這種方式
+            args=['run', script],
+            cwd=path,
+
+            # 建立 server 執行時的環境變數
+            # 如果不設定，預設是 None，會傳遞所有的環境變數
+            # 設為 {} 則完全不傳遞本機的環境變數
+            # client 應該只傳遞 server 執行所需的環境變數
+            # 這樣在 server 中就取不到其他環境變數內容
+            # 避免洩漏本機環境變數給 server 的風險
+            env=env
+        )
 
         stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
         self.stdio, self.write = stdio_transport
