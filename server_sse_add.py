@@ -1,20 +1,27 @@
-from mcp.server.fastmcp import FastMCP
-from fastapi import FastAPI
+from mcp.server.fastmcp import FastMCP, Context
+from rich.pretty import pprint
+
+# from fastapi import FastAPI, Header
 
 # Initialize the MCP server
-app = FastAPI()
+# app = FastAPI()
 mcp = FastMCP("My SSE Server")
 
 # Define a tool
 @mcp.tool()
-def add(a: int, b: int) -> int:
+def add(a: int, b: int, ctx:Context) -> int:
     """Add two numbers"""
+    pprint(ctx.client_id)
+    pprint(ctx.request_id)
+    pprint(ctx.request_context)
+    pprint(ctx.session.client_params)
     return a + b
 
 
 # Mount the SSE app to your FastAPI application
-app.mount("/", mcp.sse_app())
-import uvicorn
+mcp.run(transport='sse')
+# app.mount("/", mcp.sse_app())
+# import uvicorn
 
 # 目前似乎 clause desktop 還不支援 sse 通訊的 mcp server
 # 但可以用 VSCode 測試
@@ -25,4 +32,4 @@ import uvicorn
 #    "url": "http://localhost:8000/sse"
 # }
 
-uvicorn.run(app, host="0.0.0.0", port=8000)
+# uvicorn.run(app, host="0.0.0.0", port=8000)
