@@ -16,10 +16,7 @@ class MCPClient:
         # Initialize session and client objects
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
-        # self.anthropic = Anthropic()
         self.openai = OpenAI()
-
-    # methods will go here
 
     async def connect_to_server(self, server_script_path: str):
         """Connect to an MCP server

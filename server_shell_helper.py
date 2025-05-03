@@ -3,7 +3,6 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 import subprocess, platform
 
-# Initialize FastMCP server
 mcp = FastMCP("shell_helper")
 
 @mcp.tool()
