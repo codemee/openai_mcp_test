@@ -1,26 +1,48 @@
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
-import subprocess
+import subprocess, platform
 
 # Initialize FastMCP server
 mcp = FastMCP("shell_helper")
 
 @mcp.tool()
-async def shell_helper(comment: str, shell_command: str) -> str:
-    """可以在 Windows 下執行 powershell 指令的工具函式
+async def get_platform() -> str:
+    """取得作業系統平台
+
+    Returns:
+        str: 作業系統平台，"Windows" 為 Windows, 
+                            "*nix" 為 Linux 或 MacOS
+    """
+    system = platform.system()
+    if system == "Windows":
+        return "Windows"
+    elif system == "Linux" or system == "Darwin":
+        return "*nix"
+    else:        
+        return "Unknown"
+
+@mcp.tool()
+async def shell_helper(platform: str, shell_command: str) -> str:
+    """可以依據 platform 指定的平作業系統平台執行：
+       Windows 下 powershell 指令或是 Linux/MacOS 下 shell 指令的工具函式
 
     Args:
-        comment (str): 說明文字
+        platform (str): 作業系統平台，"Windows" 為 Windows, 
+                                   "*nix" 為 Linux 或 MacOS
         shell_command (str): 要執行的指令
     """
-    print(f'AI 建議執行以下指令：\n\n{comment}\n\n'
-          f'```\n{shell_command}\n```\n')
-    print('開始執行：\n\n')
 
     # 啟動子行程
+    if platform == "Windows":
+        args = ['powershell', '-Command', shell_command]
+    elif platform == "*nix":
+        args = shell_command
+    else:
+        return "不支援的作業系統平台"
+    
     process = subprocess.Popen(
-        ['powershell', '-Command', shell_command],
+        args,
         shell=True,             # 在 shell 中執行
         stdout=subprocess.PIPE, # 擷取標準輸出
         stderr=subprocess.PIPE, # 擷取錯誤輸出
@@ -37,22 +59,19 @@ async def shell_helper(comment: str, shell_command: str) -> str:
             break
         if output:
             result += output
-            print(f"> {output.strip()}")
+
+    result += "```"
 
     # 檢查錯誤輸出
     error = process.stderr.read()
     if error:
         result += f"\n\n錯誤: {error}"
-        print(f"錯誤: {error}")
 
     # 等待行程結束並取得返回碼
     return_code = process.wait()
-    result += f"\n```\n\n命令執行完成，返回碼: {return_code}\n\n"
-    print(f"\n\n命令執行完成，返回碼: {return_code}")
+    result += f"\n\n命令執行完成，返回碼: {return_code}\n\n"
 
     return result
-
-
 
 if __name__ == "__main__":
     # Initialize and run the server
