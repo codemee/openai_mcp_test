@@ -16,5 +16,5 @@ wheels/
 test/
 .cache
 
-#secrets
+# secrets
 mcp_servers.json
