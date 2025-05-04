@@ -10,11 +10,11 @@ wheels/
 .venv
 
 # vscode
-.vscode/
+.vscode
 
 # test
 test/
 .cache
 
 #secrets
-.mcp_servers.json
+mcp_servers.json
