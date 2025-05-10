@@ -18,3 +18,4 @@ test/
 
 # secrets
 mcp_servers.json
+claude_config_files/

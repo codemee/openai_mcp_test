@@ -1,5 +1,3 @@
-from typing import Any
-
 from mcp.server.fastmcp import FastMCP
 import subprocess, platform
 
@@ -22,9 +20,12 @@ async def get_platform() -> str:
         return "Unknown"
 
 @mcp.tool()
-async def shell_helper(platform: str, shell_command: str) -> str:
+async def shell_helper(platform: str, 
+                       shell_command: str
+) -> str:
     """可以依據 platform 指定的平作業系統平台執行：
-       Windows 下 powershell 指令或是 Linux/MacOS 下 shell 指令的工具函式
+       Windows 下 powershell 指令或是 Linux/MacOS 下 
+       shell 指令的工具函式
 
     Args:
         platform (str): 作業系統平台，"Windows" 為 Windows, 
@@ -73,5 +74,5 @@ async def shell_helper(platform: str, shell_command: str) -> str:
     return result
 
 if __name__ == "__main__":
-    # Initialize and run the server
+    # 執行 MCP 伺服器
     mcp.run(transport='stdio')

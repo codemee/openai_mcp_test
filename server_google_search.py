@@ -1,5 +1,3 @@
-from typing import Any
-
 from mcp.server.fastmcp import FastMCP
 from googlesearch import search
 
