@@ -5,7 +5,7 @@ from rich.pretty import pprint
 
 # Initialize the MCP server
 # app = FastAPI()
-mcp = FastMCP("My SSE Server")
+mcp = FastMCP("My SSE Server", port=8080)
 
 # Define a tool
 @mcp.tool()

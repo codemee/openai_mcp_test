@@ -22,9 +22,9 @@ class MCPClient:
         # Store the context managers so they stay alive
         self._streams_context = sse_client(
             url=server_url,
-            headers={
-                "API-KEY": "hhhhhhh"
-            }
+            # headers={
+            #     "API-KEY": "hhhhhhh"
+            # }
         )
         streams = await self._streams_context.__aenter__()
 

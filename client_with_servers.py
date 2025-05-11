@@ -39,7 +39,7 @@ class MCPClient:
 
         await self.session.initialize()
 
-        # List available tools
+        # 取得 MCP 伺服器提供的工具資訊
         response = await self.session.list_tools()
         tools = response.tools
         self.tools = [{
@@ -58,7 +58,7 @@ class MCPClient:
         print('-' * 20)
 
     async def cleanup(self):
-        """Clean up resources"""
+        """釋放資源"""
         await self.exit_stack.aclose()
 
 async def get_reply_text(clients, query, hist):

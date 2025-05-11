@@ -11,12 +11,11 @@ sp = spotipy.Spotify(
     auth_manager=SpotifyOAuth(
         client_id=os.getenv("SPOTIFY_CLIENT_ID"),
         client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
-        redirect_uri="http://localhost:8888/callback",
+        redirect_uri="http://127.0.0.1:8080/callback",
         scope=scope,
     )
 )
 
-# Initialize FastMCP server
 mcp = FastMCP("shell_helper")
 
 
