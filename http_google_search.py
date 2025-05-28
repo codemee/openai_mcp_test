@@ -1,12 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 from googlesearch import search
-from starlette.applications import Starlette
-from starlette.routing import Mount
 
-mcp = FastMCP(
-    "shell_helper",
-    host='0.0.0.0'
-)
+mcp = FastMCP("shell_helper")
 
 @mcp.tool()
 async def google_res(keyword: str, num_results: int = 5) -> str:
@@ -28,12 +23,8 @@ async def google_res(keyword: str, num_results: int = 5) -> str:
                     f"    {result.description}\n")
     return content
 
-# app = Starlette(
-#     routes=[
-#         Mount('/', mcp.sse_app()),
-#     ]
-# )
-    
 if __name__ == "__main__":
     # 執行伺服器
-    mcp.run(transport='sse')
+    # 在 VSCode 中測試時網址最後要加上 "/"
+    # 例如: http://localhost:8000/mcp/
+    mcp.run(transport='streamable-http')

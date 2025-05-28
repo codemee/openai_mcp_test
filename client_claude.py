@@ -1,6 +1,6 @@
 import asyncio
 from typing import Optional
-from contextlib import AsyncExitStack
+from contextlib import AsyncExitStack, suppress
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -8,7 +8,10 @@ from mcp.client.stdio import stdio_client
 from anthropic import Anthropic
 
 from rich.pretty import pprint
-import os
+import os, sys
+import warnings
+
+warnings.filterwarnings("ignore", category=ResourceWarning)
 
 class MCPClient:
     def __init__(self):
@@ -135,7 +138,7 @@ class MCPClient:
         hist = []
         while True:
             try:
-                pprint(hist)
+                # pprint(hist)
                 query = input("\nQuery: ").strip()
 
                 if query.lower() == 'quit':
@@ -163,9 +166,9 @@ async def main():
         await client.connect_to_server(sys.argv[1])
         await client.chat_loop()
     finally:
-        await client.cleanup()
+        print('離開程式')
+    await client.cleanup()
 
 if __name__ == "__main__":
-    import sys
     asyncio.run(main())
 
